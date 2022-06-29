@@ -1,0 +1,106 @@
+open class Book constructor(var title: String, var author: String, var ISBN: String)
+
+class ComicBook(title: String, author: String, ISBN: String, var genre: String) :
+    Book(title, author, ISBN)
+
+/*Creazione di una open class Book con il suo costruttore e di una classe figlia ComicBook che estende la classe padre
+e aggiunge un'attributo proprio del libro comic. Anche se in realtà il genere è comune a tutti
+diciamo che non ho capito il motivo del perchè è stato messo dentro a comicBook...
+PS: ho modificato il nome della classe chiamata Books con la S finale in Book. I nomi delle classi
+sono sempre al singolare. Ho rimosso tutte le inizializzazioni degli attributi della classe nulli
+in quanto non è possibile creare un libro che non esiste o ha parametri null, idem permetterli, quindi
+ho tolto il ? finale.
+ */
+
+
+import android.app.Activity
+
+class BookActivity : Activity() {
+
+    //uso del viemodel con Hilt
+    private val viewModel: FooActivityViewModel by viewModels()
+
+    override fun onStart() {
+        super.onStart()
+
+        /*
+        val foo = Foo()
+        var networkManager = Network.shared
+        var data: Array<Books> = emptyArray()
+        override fun onStart() {
+        super.onStart()
+        data = foo.fetchBooks()
+        foo.saveBooks(books = data)
+        // Reload Activity
+
+
+        Non ho capito perchè nell'esempio precedente veniva fatto il fetch dei libri nel db,
+        salvati nell'oggetto data e poi memorizzati nel db ?! cioè non ha senso... magari lo possiamo
+        commentare faccia a faccia.
+        Anche la parte reload activity la metterei nell'onResume...dipende comunque da ciò che si vuole fare
+
+        */
+
+
+        /* quello che era qua sotto lo metterei tutto nel viewmodel dividendo la parte network delle chiamata API
+        da quella di salvataggio nel db, solo nel caso in cui siano stati restituiti dei risultati */
+
+        viewModel.getBooks()?.let {
+            viewModel.saveBooks(it)
+        }
+
+
+// Reload Activity
+// ...
+    }
+// Activity Declaration
+// ...
+}
+
+
+/* Gestirei la parte del db locale usando room e richiamando dal viewmodel(parte logica) database.bookDao(). i sui metodi */
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun bookDao(): BookDAO
+}
+
+class BookDao {
+    fun fetchBooks(): ArrayList<Book>? {
+// Fetch from DB
+    }
+
+    fun saveBooks(books: ArrayList<Book>) {
+// Save on DB
+    }
+}
+
+/* Qui troviamo la parte logica del viewmodel al quale vengono ingettatti il database e il network
+* cosi da poterli utilizzare ovunque come unica istanza.(prima l istanza era nell onStart() dell' activity*/
+class BookActivityViewModel @Inject constructor(
+    private val database: AppDatabase,
+    private val networkService: Network,
+) : ViewModel() {
+
+    /* Dichiarazione dei metodi che vanno ad interrogare il db o il network e relativa implementazione
+     propria di questo viewModel(diversa a seconda del contesto) */
+    fun getBooks(): ArrayList<Book>? {
+
+        return if (result.size.isNotEmpryOrNull)
+            arrayListOf(result)
+        else null
+    }
+
+    fun getComicBooks(): ArrayList<ComicBook>? {
+
+        return if (result.size.isNotEmpryOrNull)
+            arrayListOf(result)
+        else null
+    }
+
+    fun fetchBooks(): ArrayList<Book>? {
+        return database.bookDao().fetchBooks()
+    }
+
+    fun saveBooks(books: ArrayList<Book>) {
+        database.bookDao().saveBooks()
+    }
+}
